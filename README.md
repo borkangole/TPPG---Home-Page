@@ -35,6 +35,3 @@ docs/           the Portal and Website structure docs
 
 ## Build order
 Homepage sections one by one: Header, Hero + Search, Featured Properties, Property Types, Locations, Why TPPG, Find My Property, Guides, Specialists, Testimonials, Final CTA, Footer.
-
-# TPPG---Home-Page
-
