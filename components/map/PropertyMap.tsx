@@ -35,9 +35,12 @@ export const ILOILO: [L.LatLngTuple, L.LatLngTuple] = [
 ];
 
 // Override with env vars for production (e.g. MapTiler keys). Defaults are fine for development.
-const STREET_URL = process.env.NEXT_PUBLIC_MAP_STREET_URL || "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
+// Street view is dark to match the site. A natively dark style (NEXT_PUBLIC_MAP_DARK_URL, shared with the
+// contact page) is used as-is; otherwise light tiles are darkened with the .tppg-dark-tiles CSS filter.
+const DARK_URL = process.env.NEXT_PUBLIC_MAP_DARK_URL;
+const STREET_URL = DARK_URL || process.env.NEXT_PUBLIC_MAP_STREET_URL || "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
 const STREET_ATTR =
-  process.env.NEXT_PUBLIC_MAP_STREET_ATTRIBUTION ||
+  (DARK_URL ? process.env.NEXT_PUBLIC_MAP_DARK_ATTRIBUTION : process.env.NEXT_PUBLIC_MAP_STREET_ATTRIBUTION) ||
   '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
 const SATELLITE_URL =
   process.env.NEXT_PUBLIC_MAP_SATELLITE_URL ||
@@ -107,7 +110,7 @@ export default function PropertyMap({ points, fitPoints, fitTo, selected, hovere
     const street = L.tileLayer(STREET_URL, {
       attribution: STREET_ATTR,
       maxZoom: 19,
-      className: "tppg-street-tiles",
+      className: DARK_URL ? undefined : "tppg-dark-tiles",
     });
     const satellite = L.layerGroup([
       L.tileLayer(SATELLITE_URL, { attribution: SATELLITE_ATTR, maxZoom: 19, maxNativeZoom: 18 }),

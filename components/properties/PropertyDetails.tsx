@@ -1,9 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import { useEffect } from "react";
-import { CloseIcon, DirectionsIcon, PinIcon } from "@/components/ui/Icons";
+import { CloseIcon, DirectionsIcon, ExpandIcon, PinIcon } from "@/components/ui/Icons";
 import { formatPeso, typeLabel } from "@/lib/format";
 import type { FeaturedProperty, SampleUnit } from "@/lib/sample-data";
 
@@ -13,6 +12,8 @@ type Props = {
   selectedUnit: string | null;
   onUnit: (id: string) => void;
   onClose: () => void;
+  /** Open the full property overlay, optionally straight to the inquiry form. */
+  onOpen: (focus: "details" | "inquire") => void;
 };
 
 function Fact({ label, value }: { label: string; value: React.ReactNode }) {
@@ -24,7 +25,7 @@ function Fact({ label, value }: { label: string; value: React.ReactNode }) {
   );
 }
 
-export function PropertyDetails({ property: p, units, selectedUnit, onUnit, onClose }: Props) {
+export function PropertyDetails({ property: p, units, selectedUnit, onUnit, onClose, onOpen }: Props) {
   // Bring a searched-for unit into view.
   useEffect(() => {
     if (selectedUnit) document.getElementById(`unit-row-${selectedUnit}`)?.scrollIntoView({ block: "nearest" });
@@ -33,7 +34,12 @@ export function PropertyDetails({ property: p, units, selectedUnit, onUnit, onCl
   return (
     <article aria-labelledby="details-title" className="p-5 sm:p-6">
       <div className="flex items-start gap-4">
-        <div className="relative hidden h-24 w-32 shrink-0 overflow-hidden rounded-lg border border-white/[0.07] sm:block">
+        <button
+          type="button"
+          onClick={() => onOpen("details")}
+          aria-label={`View photos of ${p.name}`}
+          className="group relative hidden h-24 w-32 shrink-0 overflow-hidden rounded-lg border border-white/[0.07] sm:block"
+        >
           <Image
             src={p.image}
             alt={`${p.name}, ${typeLabel(p.type)} in ${p.location}`}
@@ -41,9 +47,12 @@ export function PropertyDetails({ property: p, units, selectedUnit, onUnit, onCl
             sizes="128px"
             placeholder={typeof p.image !== "string" ? "blur" : "empty"}
             style={{ objectPosition: p.imagePosition ?? "center" }}
-            className="object-cover"
+            className="object-cover transition-transform duration-300 group-hover:scale-105"
           />
-        </div>
+          <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-2 pb-1.5 pt-4 text-left text-[0.65rem] font-semibold text-white">
+            View photos
+          </span>
+        </button>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap gap-1.5 text-[0.7rem] font-semibold">
             <span
@@ -130,9 +139,13 @@ export function PropertyDetails({ property: p, units, selectedUnit, onUnit, onCl
       </section>
 
       <div className="mt-6 flex flex-wrap gap-3">
-        <Link href={`/contact?property=${p.slug}`} className="btn-primary">
+        <button type="button" onClick={() => onOpen("details")} className="btn-primary">
+          <ExpandIcon />
+          View full property
+        </button>
+        <button type="button" onClick={() => onOpen("inquire")} className="btn-ghost border-brand/50 hover:border-brand">
           Inquire about this property
-        </Link>
+        </button>
         <a
           href={`https://www.google.com/maps/search/?api=1&query=${p.lat},${p.lng}`}
           target="_blank"

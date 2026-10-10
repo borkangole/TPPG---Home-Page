@@ -40,6 +40,7 @@ export function PropertiesView({ searchParams, title, basePath, presetType }: Pr
         view: firstParam(searchParams.view) === "gallery" ? "gallery" : "map",
         property: selected?.slug ?? null,
         unit: selected ? firstParam(searchParams.unit) || null : null,
+        full: !!selected && firstParam(searchParams.full) === "1",
       }}
     />
   );

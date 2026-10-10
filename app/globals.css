@@ -10,6 +10,10 @@
   body {
     @apply bg-ink font-sans text-zinc-100 antialiased;
   }
+  h1,
+  h2 {
+    text-wrap: balance;
+  }
   ::selection {
     @apply bg-brand text-white;
   }
@@ -62,8 +66,29 @@
 .rise-3 { animation-delay: 0.25s; }
 .rise-4 { animation-delay: 0.4s; }
 
+/* Property overlay */
+@keyframes tppg-fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes tppg-pop {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.985);
+  }
+}
+.tppg-fade-in {
+  animation: tppg-fade 0.25s ease-out both;
+}
+.tppg-pop-in {
+  animation: tppg-pop 0.35s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .rise {
+  .rise,
+  .tppg-fade-in,
+  .tppg-pop-in {
     animation: none;
   }
   html {
@@ -76,8 +101,9 @@
   background: #121214;
   font-family: inherit;
 }
-.tppg-street-tiles {
-  filter: saturate(0.85) brightness(0.92);
+/* Light OSM tiles turned into a dark map (properties street view + contact page) */
+.tppg-dark-tiles {
+  filter: invert(1) hue-rotate(180deg) contrast(0.85) brightness(1.1) saturate(0.4);
 }
 .tppg-map .leaflet-bar {
   border: 1px solid rgba(255, 255, 255, 0.12);
@@ -91,6 +117,7 @@
 .tppg-map .leaflet-bar a:hover {
   background: #232327;
 }
+.tppg-map .leaflet-container .leaflet-control-attribution,
 .tppg-map .leaflet-control-attribution {
   background: rgba(11, 11, 12, 0.75);
   color: #a1a1aa;
@@ -116,8 +143,8 @@
   font: 600 12px/1 "DM Sans Variable", system-ui, sans-serif;
   color: #fff;
   background: #18181b;
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.55);
   cursor: pointer;
   transition: background-color 0.15s, transform 0.15s;
 }
@@ -168,4 +195,58 @@
 }
 .tppg-cluster:hover {
   transform: scale(1.06);
+}
+
+/* Office marker (contact page) */
+.tppg-office-anchor {
+  background: none;
+  border: 0;
+}
+.tppg-office-pin {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 30px;
+  height: 30px;
+  transform: translate(-50%, -100%) rotate(-45deg);
+  transform-origin: center;
+  margin-top: -4px;
+  border-radius: 50% 50% 50% 0;
+  background: #f97316;
+  border: 2px solid #fff;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+}
+.tppg-office-pin::after {
+  content: "";
+  position: absolute;
+  inset: 8px;
+  border-radius: 999px;
+  background: #fff;
+}
+.tppg-office-pulse {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 18px;
+  height: 18px;
+  transform: translate(-50%, -50%);
+  border-radius: 999px;
+  background: rgba(249, 115, 22, 0.45);
+  animation: tppg-pulse 2.2s ease-out infinite;
+}
+@keyframes tppg-pulse {
+  from {
+    transform: translate(-50%, -50%) scale(0.6);
+    opacity: 0.9;
+  }
+  to {
+    transform: translate(-50%, -50%) scale(4);
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tppg-office-pulse {
+    animation: none;
+    opacity: 0.5;
+  }
 }

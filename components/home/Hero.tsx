@@ -64,10 +64,10 @@ export function Hero() {
               ))}
             </ul>
             <Link
-              href="/contact"
+              href="#find-my-property"
               className="group inline-flex items-center gap-2 text-sm font-medium text-zinc-300 hover:text-white"
             >
-              Not sure where to start? Talk to a property specialist
+              Not sure where to start? Answer four quick questions
               <ArrowRight className="h-4 w-4 text-brand transition-transform group-hover:translate-x-0.5" />
             </Link>
           </div>

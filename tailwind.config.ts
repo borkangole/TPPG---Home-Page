@@ -25,6 +25,10 @@ const config: Config = {
       maxWidth: {
         site: "76rem",
       },
+      screens: {
+        // Short viewports (laptops): used to tighten the full-property overlay so it fits without scrolling.
+        short: { raw: "(max-height: 900px)" },
+      },
     },
   },
   plugins: [],

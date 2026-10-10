@@ -21,33 +21,45 @@ import {
 } from "@/lib/filter-options";
 import { LOCATIONS, PROPERTY_TYPES, REGIONS } from "@/lib/seo/site";
 import { norm } from "@/lib/text";
+import { matchesBasic } from "@/lib/match";
 
 export const ALL_PROPERTIES = FEATURED_PROPERTIES;
 
 export function filterProperties(f: ListingFilters): FeaturedProperty[] {
   const tokens = norm(f.q).split(" ").filter(Boolean);
-  const region = REGIONS.find((r) => r.slug === f.location);
-  const area = LOCATIONS.find((l) => l.slug === f.location);
-  const type = PROPERTY_TYPES.find((t) => t.slug === f.type);
   const developer = FEATURED_DEVELOPERS.find((d) => d.slug === f.developer);
-  const [minRaw, maxRaw] = f.budget.split("-");
-  const min = Number(minRaw) || 0;
-  const max = maxRaw ? Number(maxRaw) || Infinity : Infinity;
 
   return ALL_PROPERTIES.filter((p) => {
     if (tokens.length) {
       const hay = norm(`${p.name} ${p.developer} ${p.location} ${p.region} ${p.type}`);
       if (!tokens.every((t) => hay.includes(t))) return false;
     }
-    if (region && p.region !== region.name) return false;
-    if (area && !p.areas.includes(area.slug)) return false;
-    if (type && p.type !== type.dbValue) return false;
+    if (!matchesBasic(p, f)) return false;
     if (developer && p.developer !== developer.name) return false;
-    if (f.budget && (p.startingTcp < min || p.startingTcp > max)) return false;
     if (f.status === "rfo" && p.sellingStatus !== "RFO") return false;
     if (f.status === "pre-selling" && p.sellingStatus !== "Pre-selling") return false;
     return true;
   });
+}
+
+/** Count and lowest starting price per property type (homepage "Explore by type"). */
+export function typeSummaries() {
+  return PROPERTY_TYPES.map((t) => {
+    const list = ALL_PROPERTIES.filter((p) => p.type === t.dbValue);
+    return { ...t, count: list.length, from: list.length ? Math.min(...list.map((p) => p.startingTcp)) : null };
+  });
+}
+
+/** Count and lowest starting price per location (homepage "Explore by location"). */
+export function locationSummaries() {
+  const summarize = (slug: string, name: string) => {
+    const list = ALL_PROPERTIES.filter((p) => matchesBasic(p, { location: slug }));
+    return { slug, name, count: list.length, from: list.length ? Math.min(...list.map((p) => p.startingTcp)) : null };
+  };
+  return {
+    iloilo: LOCATIONS.map((l) => summarize(l.slug, l.name)),
+    other: REGIONS.filter((r) => r.slug !== "iloilo").map((r) => summarize(r.slug, r.name)),
+  };
 }
 
 export const getProperty = (slug: string) => ALL_PROPERTIES.find((p) => p.slug === slug) ?? null;

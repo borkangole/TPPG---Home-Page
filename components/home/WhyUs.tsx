@@ -68,11 +68,8 @@ export function WhyUs() {
             ))}
           </ol>
 
-          <Link
-            href="/about"
-            className="group mt-8 inline-flex items-center gap-2 text-sm font-semibold text-white hover:text-brand-soft"
-          >
-            More about TPPG
+          <Link href="/about" className="btn-ghost group mt-8">
+            Read our story
             <ArrowRight className="h-4 w-4 text-brand transition-transform group-hover:translate-x-0.5" />
           </Link>
         </div>

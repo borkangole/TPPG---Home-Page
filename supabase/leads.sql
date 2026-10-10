@@ -8,9 +8,12 @@ create table if not exists public.leads (
   mobile         text not null,
   email          text,
   message        text,
+  inquiry_type   text,            -- property | help-choosing | investment | general
+  property_interest text,         -- free text from the form (name, location, or type)
+  property_slug  text,            -- set when the visitor came from a listing (/contact?property=slug)
   property_id    uuid,            -- link to properties (confirm table/column name)
   location       text,
-  budget         text,
+  budget         text,            -- below-2m | 2m-5m | 5m-10m | above-10m | not-sure
   source         text,            -- property_page | contact_page | find_my_property | hero
   utm_source     text,
   utm_medium     text,

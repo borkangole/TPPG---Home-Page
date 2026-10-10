@@ -1,13 +1,25 @@
+import Image from "next/image";
 import Link from "next/link";
+import logo from "@/public/brand/tppg-logo.png";
 
-// Text wordmark, matching the Portal header. Swap for the logo file when available.
-export function Logo() {
+type Props = { size?: "header" | "footer" };
+
+/** TPPG logo (transparent PNG, made for dark backgrounds). */
+export function Logo({ size = "header" }: Props) {
+  const header = size === "header";
   return (
-    <Link href="/" className="group flex items-baseline gap-2" aria-label="The Premier Property Group, home">
-      <span className="text-lg font-bold tracking-tight text-white">TPPG</span>
-      <span className="hidden text-xs font-medium text-zinc-400 transition-colors group-hover:text-zinc-200 lg:inline">
-        The Premier Property Group
-      </span>
+    <Link
+      href="/"
+      aria-label="The Premier Property Group, home"
+      className="inline-flex shrink-0 items-center transition-opacity hover:opacity-90"
+    >
+      <Image
+        src={logo}
+        alt="The Premier Property Group"
+        priority={header}
+        sizes={header ? "110px" : "150px"}
+        className={header ? "h-11 w-auto sm:h-12" : "h-16 w-auto"}
+      />
     </Link>
   );
 }

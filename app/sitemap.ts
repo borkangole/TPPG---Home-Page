@@ -1,7 +1,8 @@
 import type { MetadataRoute } from "next";
+import { GUIDES } from "@/lib/guides";
 import { LOCATIONS, PROPERTY_TYPES, SITE } from "@/lib/seo/site";
 
-// Static routes now. Property detail and guide URLs get added once data is wired.
+// Static routes and guides. Property detail URLs get added once data is wired.
 export default function sitemap(): MetadataRoute.Sitemap {
   const staticPaths = [
     "/",
@@ -10,9 +11,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/locations",
     ...LOCATIONS.map((l) => `/locations/${l.slug}`),
     "/guides",
+    ...GUIDES.map((g) => `/guides/${g.slug}`),
     "/about",
     "/property-specialists",
     "/contact",
+    "/privacy",
   ];
   return staticPaths.map((path) => ({
     url: `${SITE.url}${path}`,

@@ -20,6 +20,7 @@ import { FilterMenu } from "./FilterMenu";
 import { ListingCard } from "./ListingCard";
 import { PropertyCard } from "./PropertyCard";
 import { PropertyDetails } from "./PropertyDetails";
+import { PropertyOverlay } from "./PropertyOverlay";
 
 const PropertyMap = dynamic(() => import("@/components/map/PropertyMap"), {
   ssr: false,
@@ -59,10 +60,10 @@ type Props = {
   filters: ListingFilters;
   chips: { key: FilterKey; label: string }[];
   total: number;
-  initial: { view: ExplorerView; property: string | null; unit: string | null };
+  initial: { view: ExplorerView; property: string | null; unit: string | null; full: boolean };
 };
 
-type UrlState = Partial<ListingFilters> & { view?: ExplorerView; property?: string | null; unit?: string | null };
+type UrlState = Partial<ListingFilters> & { view?: ExplorerView; property?: string | null; unit?: string | null; full?: boolean };
 
 export function PropertiesExplorer({ title, basePath, presetType, properties, extra, unitsBySlug, filters, chips, total, initial }: Props) {
   const router = useRouter();
@@ -71,6 +72,11 @@ export function PropertiesExplorer({ title, basePath, presetType, properties, ex
   const [selected, setSelected] = useState<string | null>(initial.property);
   const [unit, setUnit] = useState<string | null>(initial.unit);
   const [hovered, setHovered] = useState<string | null>(null);
+  // Full property overlay: null = closed. "inquire" opens it at the inquiry form.
+  const [full, setFull] = useState<"details" | "inquire" | null>(initial.full && initial.property ? "details" : null);
+  // The overlay renders into document.body, so only mount it in the browser (shared ?full=1 links).
+  const [hydrated, setHydrated] = useState(false);
+  useEffect(() => setHydrated(true), []);
   const mapWrapRef = useRef<HTMLDivElement>(null);
 
   // Re-sync whenever the server sends a new URL state (search suggestions, filter changes).
@@ -78,11 +84,12 @@ export function PropertiesExplorer({ title, basePath, presetType, properties, ex
     setView(initial.view);
     setSelected(initial.property);
     setUnit(initial.unit);
+    setFull(initial.full && initial.property ? "details" : null);
   }, [initial]);
 
   const urlFor = useCallback(
     (next: UrlState, path: string) => {
-      const merged = { ...filters, view, property: selected, unit, ...next };
+      const merged = { ...filters, view, property: selected, unit, full: full !== null, ...next };
       const sp = new URLSearchParams();
       for (const k of FILTER_KEYS) {
         if (!merged[k]) continue;
@@ -92,10 +99,11 @@ export function PropertiesExplorer({ title, basePath, presetType, properties, ex
       if (merged.view === "gallery") sp.set("view", "gallery");
       if (merged.property) sp.set("property", merged.property);
       if (merged.property && merged.unit) sp.set("unit", merged.unit);
+      if (merged.property && merged.full) sp.set("full", "1");
       const qs = sp.toString();
       return qs ? `${path}?${qs}` : path;
     },
-    [filters, view, selected, unit, presetType],
+    [filters, view, selected, unit, full, presetType],
   );
 
   // Selection and view live in the URL too (shareable), without a server round-trip.
@@ -106,7 +114,8 @@ export function PropertiesExplorer({ title, basePath, presetType, properties, ex
       setSelected(slug);
       setUnit(null);
       setView("map");
-      replaceUrl(urlFor({ property: slug, unit: null, view: "map" }, basePath));
+      setFull(null);
+      replaceUrl(urlFor({ property: slug, unit: null, view: "map", full: false }, basePath));
       // On phones the map sits above the list: bring it into view.
       if (window.matchMedia("(max-width: 1023px)").matches) {
         setTimeout(() => mapWrapRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 60);
@@ -118,7 +127,34 @@ export function PropertiesExplorer({ title, basePath, presetType, properties, ex
   const clearSelection = () => {
     setSelected(null);
     setUnit(null);
-    replaceUrl(urlFor({ property: null, unit: null }, basePath));
+    setFull(null);
+    replaceUrl(urlFor({ property: null, unit: null, full: false }, basePath));
+  };
+
+  /** Open the full property overlay (from the details panel, or straight from a gallery card). */
+  const openFull = (focus: "details" | "inquire", slug?: string) => {
+    const target = slug ?? selected;
+    if (!target) return;
+    if (slug && slug !== selected) {
+      setSelected(slug);
+      setUnit(null);
+    }
+    setFull(focus);
+    replaceUrl(urlFor({ property: target, unit: slug && slug !== selected ? null : unit, full: true }, basePath));
+  };
+
+  const closeFull = useCallback(() => {
+    setFull(null);
+    replaceUrl(urlFor({ full: false }, basePath));
+  }, [urlFor, basePath]);
+
+  const showOnMap = () => {
+    setFull(null);
+    setView("map");
+    replaceUrl(urlFor({ full: false, view: "map" }, basePath));
+    if (window.matchMedia("(max-width: 1023px)").matches) {
+      setTimeout(() => mapWrapRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 80);
+    }
   };
 
   const chooseUnit = (id: string) => {
@@ -196,7 +232,7 @@ export function PropertiesExplorer({ title, basePath, presetType, properties, ex
       </div>
 
       {view === "map" ? (
-        <div className="grid min-h-0 flex-1 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)]">
+        <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)]">
           {/* Left: list */}
           <aside aria-label="Property list" className="order-2 flex min-h-0 flex-col lg:order-1 lg:border-r lg:border-white/[0.06]">
             <div className="relative z-20 border-b border-white/[0.06] p-5">{header}</div>
@@ -245,6 +281,7 @@ export function PropertiesExplorer({ title, basePath, presetType, properties, ex
                   selectedUnit={unit}
                   onUnit={chooseUnit}
                   onClose={clearSelection}
+                  onOpen={(focus) => openFull(focus)}
                 />
               ) : (
                 <DetailsEmpty onArea={(slug) => applyFilters({ location: slug })} />
@@ -260,7 +297,7 @@ export function PropertiesExplorer({ title, basePath, presetType, properties, ex
               <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 {properties.map((p) => (
                   <li key={p.slug}>
-                    <PropertyCard property={p} onSelect={() => select(p.slug)} />
+                    <PropertyCard property={p} onSelect={() => openFull("details", p.slug)} />
                   </li>
                 ))}
               </ul>
@@ -269,6 +306,18 @@ export function PropertiesExplorer({ title, basePath, presetType, properties, ex
             )}
           </div>
         </div>
+      )}
+
+      {hydrated && full && selectedProperty && (
+        <PropertyOverlay
+          property={selectedProperty}
+          units={unitsBySlug[selectedProperty.slug] ?? []}
+          focus={full}
+          selectedUnit={unit}
+          onUnit={chooseUnit}
+          onClose={closeFull}
+          onShowOnMap={showOnMap}
+        />
       )}
     </section>
   );

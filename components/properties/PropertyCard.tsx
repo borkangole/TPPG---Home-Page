@@ -12,7 +12,7 @@ const TYPE_LABEL: Record<FeaturedProperty["type"], string> = {
 
 type PropertyCardProps = {
   property: FeaturedProperty;
-  /** Where the card links. Defaults to the Properties map with this property selected. */
+  /** Where the card links. Defaults to the full property view on the Properties page. */
   href?: string;
   /** If given, clicking the card calls this instead of navigating (used inside the Properties page). */
   onSelect?: () => void;
@@ -53,7 +53,7 @@ export function PropertyCard({ property: p, href, onSelect }: PropertyCardProps)
         </p>
         <h3 className="mt-2 text-lg font-semibold text-white">
           <Link
-            href={href ?? `/properties?property=${p.slug}`}
+            href={href ?? `/properties?property=${p.slug}&full=1`}
             onClick={
               onSelect
                 ? (e) => {
